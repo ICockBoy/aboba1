@@ -2,7 +2,7 @@ import asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import Message, InlineKeyboardButton, CallbackQuery
+from aiogram.types import Message, InlineKeyboardButton, CallbackQuery, ChatPermissions
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from cred import TOKEN
 from Filters import ChatTypeFilter
@@ -70,6 +70,10 @@ async def checkMessage(message: Message):
     kb.add(InlineKeyboardButton(text='Проверить подписку', callback_data="none"))
     links = await check(message, message.chat.id)
     if links:
+        try:
+            await bot.restrict_chat_member(message.chat.id, message.from_user.id, {'can_send_messages': False})
+        except:
+            pass
         await message.delete()
         await message.answer(text=f"{message.from_user.username}, приветствую тебя! \nЧтобы иметь возможность"
                                   f" писать в чат, необходимо подписаться на канал(ы): \n"
@@ -82,6 +86,10 @@ async def ch(callback: CallbackQuery):
     if links:
         await callback.answer(show_alert=True, text="Вы ещё не подписались на каналы")
     else:
+        try:
+            await bot.restrict_chat_member(callback.message.chat.id, callback.from_user.id, {'can_send_messages': True})
+        except:
+            pass
         await callback.answer(show_alert=True, text="Теперь вы можете писать сообщения!")
         await callback.message.delete()
 
