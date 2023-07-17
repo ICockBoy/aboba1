@@ -1,4 +1,6 @@
 import asyncio
+from pprint import pprint
+
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -13,6 +15,12 @@ from Database import DataBase
 bot = Bot(token=TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 print("bot started")
+
+
+async def job(msg, id, chat):
+    await asyncio.sleep(60)
+    await bot.restrict_chat_member(chat, id, {"can_send_messages": True})
+    await msg.delete()
 
 
 async def check(message: Message, chatId: str = None):
@@ -44,7 +52,7 @@ async def enableBlock(message: Message):
             channelData = await bot.get_chat(channelName)
             print(channelData)
             if channelData.invite_link is not None:
-                db.enableBlock(str(message.chat.id), str(channelData.id), str(channelData.invite_link))
+                db.enableBlock(str(message.chat.id), str(channelData.id), str(channelData.invite_link) + " " + channelData.title)
                 await message.answer(
                     text=f"Пользователи, не подписанные на {channelData.title} больше не смогут отправлять сообщения")
             else:
@@ -66,18 +74,25 @@ async def disableBlock(message: Message):
 # -------------------Message Check---------------------------------#
 @dp.message(ChatTypeFilter(chat_type=["group", "supergroup"]))
 async def checkMessage(message: Message):
-    kb = InlineKeyboardBuilder()
-    kb.add(InlineKeyboardButton(text='Проверить подписку', callback_data="none"))
-    links = await check(message, message.chat.id)
-    if links:
-        try:
-            await bot.restrict_chat_member(message.chat.id, message.from_user.id, {'can_send_messages': False})
-        except:
-            pass
-        await message.delete()
-        await message.answer(text=f"{message.from_user.username}, приветствую тебя! \nЧтобы иметь возможность"
-                                  f" писать в чат, необходимо подписаться на канал(ы): \n"
-                                  f"{' '.join(links)}", reply_markup=kb.as_markup())
+    if message.left_chat_member is None:
+        kb = InlineKeyboardBuilder()
+        kb.add(InlineKeyboardButton(text='Проверить подписку', callback_data="none"))
+        links = await check(message, message.chat.id)
+        if links:
+            try:
+                await bot.restrict_chat_member(message.chat.id, message.from_user.id, {'can_send_messages': False})
+            except:
+                pass
+            [kb.row(InlineKeyboardButton(text=list(links)[n].split()[-1], url=list(links)[n].split()[0])) for n in
+             range(len(list(links)))]
+            chName = [list(links)[n].split()[-1] for n in range(len(list(links)))]
+            chLinks = [list(links)[n].split()[0] for n in range(len(list(links)))]
+            a = '\n'.join([f"<a href='{chLinks[_]}'>{chName[_]}</a>" for _ in range(len(chName))])
+            await message.delete()
+            msg = await message.answer(text=f"{message.from_user.username}, приветствую тебя! \nЧтобы иметь возможность"
+                                      f" писать в чат, необходимо подписаться на канал(ы): \n"
+                                      f"{a}", parse_mode="HTML", reply_markup=kb.as_markup())
+            asyncio.create_task(job(msg, message.from_user.id, message.chat.id))
 
 
 @dp.callback_query()
