@@ -12,6 +12,7 @@ from Database import DataBase
 
 # ------------------------------------------#
 
+ids = []
 bot = Bot(token=TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 print("bot started")
@@ -52,7 +53,7 @@ async def enableBlock(message: Message):
             channelData = await bot.get_chat(channelName)
             print(channelData)
             if channelData.invite_link is not None:
-                db.enableBlock(str(message.chat.id), str(channelData.id), str(channelData.invite_link) + " " + channelData.title)
+                db.enableBlock(str(message.chat.id), str(channelData.id), str(channelData.invite_link) + "|" + channelData.title)
                 await message.answer(
                     text=f"Пользователи, не подписанные на {channelData.title} больше не смогут отправлять сообщения")
             else:
@@ -83,11 +84,12 @@ async def checkMessage(message: Message):
                 await bot.restrict_chat_member(message.chat.id, message.from_user.id, {'can_send_messages': False})
             except:
                 pass
-            [kb.row(InlineKeyboardButton(text=list(links)[n].split()[-1], url=list(links)[n].split()[0])) for n in
+            [kb.row(InlineKeyboardButton(text=list(links)[n].split("|")[-1], url=list(links)[n].split("|")[0])) for n in
              range(len(list(links)))]
-            chName = [list(links)[n].split()[-1] for n in range(len(list(links)))]
-            chLinks = [list(links)[n].split()[0] for n in range(len(list(links)))]
+            chName = [list(links)[n].split("|")[-1] for n in range(len(list(links)))]
+            chLinks = [list(links)[n].split("|")[0] for n in range(len(list(links)))]
             a = '\n'.join([f"<a href='{chLinks[_]}'>{chName[_]}</a>" for _ in range(len(chName))])
+            ids.append(message.from_user.id)
             await message.delete()
             msg = await message.answer(text=f"{message.from_user.username}, приветствую тебя! \nЧтобы иметь возможность"
                                       f" писать в чат, необходимо подписаться на канал(ы): \n"
@@ -97,16 +99,20 @@ async def checkMessage(message: Message):
 
 @dp.callback_query()
 async def ch(callback: CallbackQuery):
-    links = await check(callback, callback.message.chat.id)
-    if links:
-        await callback.answer(show_alert=True, text="Вы ещё не подписались на каналы")
+    if callback.from_user.id in ids:
+        links = await check(callback, callback.message.chat.id)
+        if links:
+            await callback.answer(show_alert=True, text="Вы ещё не подписались на каналы")
+        else:
+            ids.remove(callback.from_user.id)
+            try:
+                await bot.restrict_chat_member(callback.message.chat.id, callback.from_user.id, {'can_send_messages': True})
+            except:
+                pass
+            await callback.answer(show_alert=True, text="Теперь вы можете писать сообщения!")
+            await callback.message.delete()
     else:
-        try:
-            await bot.restrict_chat_member(callback.message.chat.id, callback.from_user.id, {'can_send_messages': True})
-        except:
-            pass
-        await callback.answer(show_alert=True, text="Теперь вы можете писать сообщения!")
-        await callback.message.delete()
+        await callback.answer()
 
 
 @dp.message(ChatTypeFilter(chat_type="private"))
