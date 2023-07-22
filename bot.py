@@ -14,8 +14,11 @@ print("bot started")
 
 
 async def check(message: CallbackQuery, chatId: str = None):
-    status = await bot.get_chat_member(chatId, message.from_user.id)
-    return False if status.status == "left" else True
+    try:
+        status = await bot.get_chat_member(chatId, message.from_user.id)
+        return False if status.status == "left" else True
+    except:
+        return False
 
 
 async def giftMessage(message: Message):
