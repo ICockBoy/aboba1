@@ -31,7 +31,7 @@ async def giftMessage(message: Message):
 
 Подписывайтесь на мой канал, если еще этого не сделали, и забирайте бесплатно <b>Диагностическую сессию</b>! ⬇️⬇️⬇️ '''
 
-    await message.answer(text=giftText, reply_markup=kb.as_markup(), parse_mode="HTML")
+    await message.answer(text=giftText, reply_markup=kb.as_markup(), parse_mode="HTML", disable_web_page_preview=True)
 
 
 @dp.message(Command("start"))
@@ -82,7 +82,7 @@ async def checkMessage(callback: CallbackQuery):
                f"Если у Вас появились вопросы, со мной можно продолжить общение в чате WhatsApp"
         kb = InlineKeyboardBuilder().add(InlineKeyboardButton(url="https://wa.me/+79774916345", text="Перейти в WhatsApp"))
         await callback.message.answer(text=text, reply_markup=kb.as_markup(),
-                                      parse_mode="HTML", disable_web_page_preview=False)
+                                      parse_mode="HTML", disable_web_page_preview=True)
 
 
 async def main():
