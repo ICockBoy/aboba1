@@ -73,7 +73,7 @@ async def start(message: Message):
 # -------------------Message Check---------------------------------#
 @dp.callback_query()
 async def checkMessage(callback: CallbackQuery):
-    if not await check(callback, "@sedakovacoach"):
+    if not await check(callback, "@ugabuga3301"):
         await callback.answer(show_alert=True, text="Вы ещё не подписались на канал!")
     else:
         text = f"{callback.from_user.first_name}, чтобы забронировать <b>диагностическую сессию</b>, \n" \
