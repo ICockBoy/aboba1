@@ -27,7 +27,7 @@ async def giftMessage(message: Message):
     kb.add(InlineKeyboardButton(text="Я подписался. Хочу сессию!", callback_data="subscribe"))
     giftText = f'''{message.from_user.first_name}, если Вы не просто скачали подарок, но и подписались на мой канал, то для подписчиков у меня есть подарок - я дам обратную связь Вам, как руководителю, в рамках Диагностической сессии по итогам Опросника
 
-Пройти Опросник здесь <a href=''>(тут ссылка)</a>
+Пройти Опросник здесь <a href='https://'>(тут ссылка)</a>
 
 Подписывайтесь на мой канал, если еще этого не сделали, и забирайте бесплатно <b>Диагностическую сессию</b>! ⬇️⬇️⬇️ '''
 
@@ -78,7 +78,7 @@ async def checkMessage(callback: CallbackQuery):
     else:
         text = f"{callback.from_user.first_name}, чтобы забронировать <b>диагностическую сессию</b>, \n" \
                f"выберите удобное для Вас время в календаре ⬇️⬇️⬇️\n" \
-               f"<a href=''>(тут ссылка)</a> \n" \
+               f"<a href='https://'>(тут ссылка)</a> \n \n" \
                f"Если у Вас появились вопросы, со мной можно продолжить общение в чате WhatsApp"
         kb = InlineKeyboardBuilder().add(InlineKeyboardButton(url="https://wa.me/+79774916345", text="Перейти в WhatsApp"))
         await callback.message.answer(text=text, reply_markup=kb.as_markup(), parse_mode="HTML")
