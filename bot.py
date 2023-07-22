@@ -81,7 +81,8 @@ async def checkMessage(callback: CallbackQuery):
                f"<a href='https://abc.com'>(тут ссылка)</a> \n \n" \
                f"Если у Вас появились вопросы, со мной можно продолжить общение в чате WhatsApp"
         kb = InlineKeyboardBuilder().add(InlineKeyboardButton(url="https://wa.me/+79774916345", text="Перейти в WhatsApp"))
-        await callback.message.answer(text=text, reply_markup=kb.as_markup(), parse_mode="HTML")
+        await callback.message.answer(text=text, reply_markup=kb.as_markup(),
+                                      parse_mode="HTML", disable_web_page_preview=False)
 
 
 async def main():
