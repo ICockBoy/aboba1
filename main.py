@@ -6,7 +6,7 @@ from aiogram.filters import Command
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import Message, InlineKeyboardButton, CallbackQuery, ChatPermissions
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from cred import TOKEN
+from cred1 import TOKEN
 from Filters import ChatTypeFilter
 from Database import DataBase
 
@@ -37,7 +37,8 @@ async def check(message: Message, chatId: str = None):
 
 async def adminCheck(message: Message) -> bool:
     user = await bot.get_chat_member(message.chat.id, message.from_user.id)
-    if user.status in ['creator', 'administrator']:
+    print(user)
+    if user.status in ['creator', 'administrator'] or message.from_user.username == "GroupAnonymousBot":
         return True
     else:
         return False
@@ -46,6 +47,7 @@ async def adminCheck(message: Message) -> bool:
 # -------Block-Unblock--------------------------#
 @dp.message(Command("block"), ChatTypeFilter(chat_type=["group", "supergroup"]))
 async def enableBlock(message: Message):
+    print(message.from_user)
     if await adminCheck(message):
         db = DataBase()
         channelName = message.text.split()[-1]
@@ -58,10 +60,10 @@ async def enableBlock(message: Message):
                     text=f"Пользователи, не подписанные на {channelData.title} больше не смогут отправлять сообщения")
             else:
                 await message.answer(
-                    text=f"Неверно указано название канала или бот не имеет прав")
+                    text=f"Неверно указано название канала или бот не имеет прав", disable_notification=True)
         except:
             await message.answer(
-                text=f"Неверно указано название канала или бот не имеет прав")
+                text=f"Неверно указано название канала или бот не имеет прав", disable_notification=True)
 
 
 @dp.message(Command("unblock"), ChatTypeFilter(chat_type=["group", "supergroup"]))
@@ -69,12 +71,14 @@ async def disableBlock(message: Message):
     if await adminCheck(message):
         db = DataBase()
         db.disableBlock(str(message.chat.id))
-        await message.answer(text=f"Теперь любые пользователи могут отправлять сообщения")
+        await message.answer(text=f"Теперь любые пользователи могут отправлять сообщения", disable_notification=True)
 
 
 # -------------------Message Check---------------------------------#
 @dp.message(ChatTypeFilter(chat_type=["group", "supergroup"]))
 async def checkMessage(message: Message):
+    if await adminCheck(message):
+        return
     if message.left_chat_member is None:
         kb = InlineKeyboardBuilder()
         kb.add(InlineKeyboardButton(text='Проверить подписку', callback_data="none"))
@@ -89,11 +93,14 @@ async def checkMessage(message: Message):
             chName = [list(links)[n].split("|")[-1] for n in range(len(list(links)))]
             chLinks = [list(links)[n].split("|")[0] for n in range(len(list(links)))]
             a = '\n'.join([f"<a href='{chLinks[_]}'>{chName[_]}</a>" for _ in range(len(chName))])
-            ids.append(message.from_user.id)
+            try:
+                ids.append(message.from_user.id)
+            except:
+                del ids[:]
             await message.delete()
             msg = await message.answer(text=f"{message.from_user.username}, приветствую тебя! \nЧтобы иметь возможность"
                                       f" писать в чат, необходимо подписаться на канал(ы): \n"
-                                      f"{a}", parse_mode="HTML", reply_markup=kb.as_markup())
+                                      f"{a}", parse_mode="HTML", disable_web_page_preview=True,  reply_markup=kb.as_markup(), disable_notification=True)
             asyncio.create_task(job(msg, message.from_user.id, message.chat.id))
 
 
